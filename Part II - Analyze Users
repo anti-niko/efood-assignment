@@ -1,4 +1,4 @@
-----Calculate average number of user orders and average order amount
+----Calculate average orders per user and average order value
 
 WITH user_info AS (
 SELECT
@@ -16,7 +16,7 @@ SELECT
 FROM user_info
 
 
-----Create user segments based on average number of user orders and average order amount and calculate the number of users in each of them
+----Create user segments based on average orders and average order value and calculate the number of users in each of them
 
 WITH user_segments AS (
 SELECT
