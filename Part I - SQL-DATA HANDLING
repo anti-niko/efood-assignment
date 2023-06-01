@@ -1,0 +1,75 @@
+--------QUERY #1--------
+
+WITH city_metrics AS (
+SELECT
+    city,
+    COUNT(DISTINCT user_id) AS total_users,
+    COUNT(CASE WHEN cuisine = "Breakfast" THEN 1 END) AS breakfast_orders,
+    COUNT(*) AS total_orders,
+    SUM(CASE WHEN cuisine = "Breakfast" THEN amount ELSE 0 END) AS breakfast_amount,
+    SUM(amount) AS total_efood_amount
+  FROM efood2022-388512.main_assessment.orders
+  GROUP BY city
+  HAVING COUNT(*) > 1000),
+
+user_metrics AS (
+SELECT
+    city,
+    COUNT(DISTINCT CASE WHEN cuisine = 'Breakfast' THEN user_id END) AS breakfast_users,
+    COUNT(CASE WHEN frequency > 3 THEN 1 END) AS efood_users_exceeding_3,
+    COUNT(CASE WHEN frequency > 3 AND cuisine = 'Breakfast' THEN 1 END) AS breakfast_users_exceeding_3
+  FROM (
+    SELECT
+      city,
+      user_id,
+      cuisine,
+      COUNT(*) AS frequency
+    FROM efood2022-388512.main_assessment.orders
+    GROUP BY city, user_id, cuisine) AS user_stats
+  GROUP BY city
+  HAVING SUM(frequency) > 1000)
+
+SELECT
+  cm.city,
+  cm.breakfast_amount / cm.breakfast_orders AS breakfast_basket,
+  cm.total_efood_amount / cm.total_orders AS efood_basket,
+  cm.breakfast_orders/ um.breakfast_users AS breakfast_freq,
+  cm.total_orders/cm.total_users AS efood_freq,
+  um.breakfast_users_exceeding_3/ um.breakfast_users AS breakfast_users3freq,
+  um.efood_users_exceeding_3 / cm.total_users AS efood_users3freq
+FROM city_metrics cm
+JOIN user_metrics um ON cm.city = um.city
+ORDER BY cm.breakfast_orders DESC
+LIMIT 5
+
+
+
+--------QUERY #2--------
+
+WITH metrics AS (
+SELECT
+    city,
+    COUNT(*) AS total_orders
+  FROM efood2022-388512.main_assessment.orders
+  GROUP BY city),
+
+top_users AS (
+SELECT
+    city,
+    user_id,
+    COUNT(*) AS user_orders,
+    ROW_NUMBER() OVER (PARTITION BY city ORDER BY COUNT(*) DESC) AS row_num
+  FROM efood2022-388512.main_assessment.orders
+  GROUP BY city, user_id)
+
+SELECT
+  tu.city,
+  SUM(tu.user_orders) AS total_top10users_orders,
+  m.total_orders,
+  ROUND(SUM(tu.user_orders) / m.total_orders  * 100, 2) AS percentage_of_orders
+FROM top_users tu
+JOIN metrics m ON tu.city = m.city
+WHERE tu.row_num <= 10
+GROUP BY tu.city, m.total_orders
+ORDER BY tu.city
+
