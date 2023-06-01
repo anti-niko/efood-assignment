@@ -1,18 +1,18 @@
----Calculate average number of user orders and average order amount
+----Calculate average number of user orders and average order amount
 
 WITH user_info AS (
 SELECT
     user_id,
     COUNT(*) AS total_orders,
     SUM(amount) as total_amount,
-    AVG(amount) AS average_amount
+    AVG(amount) AS avg_amount
   FROM efood2022-388512.main_assessment.orders
   WHERE cuisine='Breakfast'
   GROUP BY user_id)
   
 SELECT
-  AVG(total_orders) AS avg_orders,
-  AVG(average_amount) AS avg_amount
+  ROUND(AVG(total_orders),0) AS avg_orders,
+  ROUND(AVG(avg_amount),0) AS avg_order_value
 FROM user_info
 
 
@@ -40,8 +40,8 @@ FROM (
 ) AS user_stats)
 
 SELECT 
-COUNT(CASE WHEN segment='High Frequency & High Value' THEN 1 END) AS hf_hv,
-COUNT(CASE WHEN segment='High Frequency & Low Value' THEN 1 END) AS hf_lv,
-COUNT(CASE WHEN segment='Low Frequency & High Value' THEN 1 END) AS lf_hv,
-COUNT(CASE WHEN segment='Low Frequency & Low Value' THEN 1 END) AS lf_lv
+COUNT(CASE WHEN segment='High Frequency & High Value' THEN 1 END) AS high_freq_high_value,
+COUNT(CASE WHEN segment='High Frequency & Low Value' THEN 1 END) AS high_freq_low_value,
+COUNT(CASE WHEN segment='Low Frequency & High Value' THEN 1 END) AS low_freq_high_value,
+COUNT(CASE WHEN segment='Low Frequency & Low Value' THEN 1 END) AS low_freq_low_value
 FROM user_segments
