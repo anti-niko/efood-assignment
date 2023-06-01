@@ -1,0 +1,47 @@
+---Calculate average number of user orders and average order amount
+
+WITH user_info AS (
+SELECT
+    user_id,
+    COUNT(*) AS total_orders,
+    SUM(amount) as total_amount,
+    AVG(amount) AS average_amount
+  FROM efood2022-388512.main_assessment.orders
+  WHERE cuisine='Breakfast'
+  GROUP BY user_id)
+  
+SELECT
+  AVG(total_orders) AS avg_orders,
+  AVG(average_amount) AS avg_amount
+FROM user_info
+
+
+----Create user segments based on average number of user orders and average order amount and calculate the number of users in each of them
+
+WITH user_segments AS (
+SELECT
+  user_id,
+  total_orders,
+  avg_order_value,
+  CASE
+    WHEN total_orders >= 4 AND avg_order_value >= 6 THEN 'High Frequency & High Value'
+    WHEN total_orders >= 4 THEN 'High Frequency & Low Value'
+    WHEN avg_order_value >= 6 THEN 'Low Frequency & High Value'
+    ELSE 'Low Frequency & Low Value'
+  END AS segment
+FROM (
+  SELECT
+    user_id,
+    COUNT(*) AS total_orders,
+    AVG(amount) AS avg_order_value
+  FROM efood2022-388512.main_assessment.orders
+  WHERE cuisine='Breakfast'
+  GROUP BY user_id
+) AS user_stats)
+
+SELECT 
+COUNT(CASE WHEN segment='High Frequency & High Value' THEN 1 END) AS hf_hv,
+COUNT(CASE WHEN segment='High Frequency & Low Value' THEN 1 END) AS hf_lv,
+COUNT(CASE WHEN segment='Low Frequency & High Value' THEN 1 END) AS lf_hv,
+COUNT(CASE WHEN segment='Low Frequency & Low Value' THEN 1 END) AS lf_lv
+FROM user_segments
