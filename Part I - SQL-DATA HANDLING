@@ -63,13 +63,13 @@ SELECT
   GROUP BY city, user_id)
 
 SELECT
-  tu.city,
-  SUM(tu.user_orders) AS total_top10users_orders,
+  m.city,
+  SUM(tu.user_orders) AS top10users_orders,
   m.total_orders,
-  ROUND(SUM(tu.user_orders) / m.total_orders  * 100, 2) AS percentage_of_orders
+  ROUND(SUM(tu.user_orders) / m.total_orders  * 100, 2) AS top10users_orders_perc
 FROM top_users tu
 JOIN metrics m ON tu.city = m.city
 WHERE tu.row_num <= 10
-GROUP BY tu.city, m.total_orders
-ORDER BY tu.city
+GROUP BY m.city, m.total_orders
+ORDER BY m.city
 
